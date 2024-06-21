@@ -1,0 +1,10 @@
+<div id="todo-list">
+    {% for date in week_dates %}
+    <h2>{{ date }}</h2>
+    <ul>
+        {% for task in tasks.get(date, []) %}
+        <li>{{ task }}</li>
+        {% endfor %}
+    </ul>
+    {% endfor %}
+</div>

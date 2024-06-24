@@ -12,7 +12,8 @@ def recreate_schema():
     CREATE TABLE tasks (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         task TEXT NOT NULL,
-        task_date DATE NOT NULL
+        task_date DATE NOT NULL,
+        done BOOLEAN NOT NULL DEFAULT 0
     )
     ''')
     

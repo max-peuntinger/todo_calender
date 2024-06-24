@@ -11,7 +11,8 @@
 
 <body>
     <h1>Todo List</h1>
-    <form id="todo-form" method="post" action="/add" hx-post="/add" hx-target="#todo-list" hx-swap="outerHTML">
+    <form id="todo-form" method="post" action="/add" hx-post="/add" hx-target="#todo-list" hx-swap="outerHTML"
+        onsubmit="addTask(event)">
         <input type="text" name="task" placeholder="New task">
         <input type="date" name="task_date" value="{{ week_dates[0] }}">
         <button type="submit">Add</button>
@@ -21,11 +22,62 @@
         <h2>{{ date }}</h2>
         <ul>
             {% for task in tasks.get(date, []) %}
-            <li>{{ task }}</li>
+            <li data-id="{{ task['id'] }}">
+                {{ task['task'] }}
+                <input type="checkbox" class="checkmark" {% if task['done'] %}checked{% endif %}
+                    onclick="toggleTaskStatus({{ task['id'] }})">
+            </li>
             {% endfor %}
         </ul>
         {% endfor %}
     </div>
+    <script>
+        function addTask(event) {
+            event.preventDefault();
+            const form = event.target;
+            fetch(form.action, {
+                method: 'POST',
+                body: new FormData(form),
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        window.location.reload();
+                    } else {
+                        console.error('Failed to add task.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        }
+
+        function toggleTaskStatus(taskId) {
+            const checkBox = document.querySelector(`li[data-id='${taskId}'] .checkmark`);
+            const isChecked = checkBox.checked;
+
+            fetch(`/update_task_status`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ task_id: taskId, done: isChecked })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        window.location.reload();
+                    } else {
+                        console.error('Failed to update task status.');
+                        checkBox.checked = !isChecked; // revert the checkbox status
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    checkBox.checked = !isChecked; // revert the checkbox status
+                });
+        }
+    </script>
 </body>
 
 </html>

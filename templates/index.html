@@ -25,6 +25,7 @@
                 {{ task['task'] }}
                 <input type="checkbox" class="checkmark" {% if task['done'] %}checked{% endif %}
                     onclick="toggleTaskStatus({{ task['id'] }})">
+                <button onclick="deleteTask({{ task['id'] }})">Delete</button>
             </li>
             {% endfor %}
         </ul>
@@ -74,6 +75,27 @@
                 .catch(error => {
                     console.error('Error:', error);
                     checkBox.checked = !isChecked; // revert the checkbox status
+                });
+        }
+
+        function deleteTask(taskId) {
+            fetch(`/delete_task`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ task_id: taskId })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        window.location.reload();
+                    } else {
+                        console.error('Failed to delete task.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
                 });
         }
     </script>

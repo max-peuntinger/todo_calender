@@ -21,7 +21,7 @@ def get_next_week_dates():
 def get_tasks():
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute('SELECT * FROM tasks')
+    cursor.execute('SELECT * FROM tasks WHERE is_deleted = 0')
     rows = cursor.fetchall()
     conn.close()
     
@@ -60,6 +60,19 @@ async def update_task_status(request: Request):
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute('UPDATE tasks SET done = ? WHERE id = ?', (done, task_id))
+    conn.commit()
+    conn.close()
+    
+    return JSONResponse(content={'success': True})
+
+@app.post("/delete_task", response_class=JSONResponse)
+async def delete_task(request: Request):
+    data = await request.json()
+    task_id = data.get('task_id')
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('UPDATE tasks SET is_deleted = 1 WHERE id = ?', (task_id,))
     conn.commit()
     conn.close()
     

@@ -13,7 +13,8 @@ def recreate_schema():
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         task TEXT NOT NULL,
         task_date DATE NOT NULL,
-        done BOOLEAN NOT NULL DEFAULT 0
+        done BOOLEAN NOT NULL DEFAULT 0,
+        is_deleted BOOLEAN NOT NULL DEFAULT 0
     )
     ''')
     

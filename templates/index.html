@@ -19,15 +19,19 @@
     <div id="todo-list">
         {% for date in week_dates %}
         <h2>{{ date }}</h2>
-        <ul>
+        <ul class="task-list" id="list-{{ date }}" ondrop="drop(event)" ondragover="allowDrop(event)">
+            {% if tasks.get(date, []) %}
             {% for task in tasks.get(date, []) %}
-            <li data-id="{{ task['id'] }}">
+            <li class="task-item" data-id="{{ task['id'] }}" draggable="true" ondragstart="drag(event)">
                 {{ task['task'] }}
                 <input type="checkbox" class="checkmark" {% if task['done'] %}checked{% endif %}
                     onclick="toggleTaskStatus({{ task['id'] }})">
                 <button onclick="deleteTask({{ task['id'] }})">Delete</button>
             </li>
             {% endfor %}
+            {% else %} {# need placeholder to have date i can drag other entries to #}
+            <li class="placeholder" style="display:none;"></li>
+            {% endif %}
         </ul>
         {% endfor %}
     </div>
@@ -98,6 +102,54 @@
                     console.error('Error:', error);
                 });
         }
+
+        function allowDrop(event) {
+            event.preventDefault();
+        }
+
+        function drag(event) {
+            event.dataTransfer.setData("text/plain", event.target.dataset.id);
+        }
+
+        function drop(event) {
+            event.preventDefault();
+            const taskId = event.dataTransfer.getData("text/plain");
+            const newDate = event.target.closest('.task-list').id.replace('list-', '');
+            console.log('Dropped task:', taskId, 'on date:', newDate);
+            if (newDate.length === 10) {  // Ensure the date is in the correct format
+                updateTaskDate(taskId, newDate);
+            } else {
+                console.error('Invalid date format:', newDate);
+            }
+        }
+
+        function updateTaskDate(taskId, newDate) {
+            console.log('Updating task:', taskId, 'to new date:', newDate);
+            fetch(`/update_task_date`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ task_id: taskId, new_date: newDate })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        window.location.reload();
+                    } else {
+                        console.error('Failed to update task date.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        }
+
+        document.querySelectorAll('.task-list').forEach(list => {
+            if (!list.querySelector('.task-item')) {
+                list.innerHTML += '<li class="placeholder" style="min-height: 20px;"></li>';
+            }
+        });
     </script>
 </body>
 

@@ -4,6 +4,7 @@ from fastapi.staticfiles import StaticFiles
 from jinja2 import Template
 from datetime import datetime, timedelta
 import sqlite3
+from pydantic import BaseModel
 
 app = FastAPI()
 
@@ -77,6 +78,28 @@ async def delete_task(request: Request):
     conn.close()
     
     return JSONResponse(content={'success': True})
+
+class UpdateTaskDate(BaseModel):
+    task_id: int
+    new_date: str
+
+@app.post("/update_task_date", response_class=JSONResponse)
+async def update_task_date(update: UpdateTaskDate):
+    task_id = update.task_id
+    new_date = update.new_date
+    print(f"Received request to update task {task_id} to new date {new_date}")
+    try:
+        # Validate the date format
+        datetime.strptime(new_date, "%Y-%m-%d")
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute('UPDATE tasks SET task_date = ? WHERE id = ?', (new_date, task_id))
+        conn.commit()
+        conn.close()
+        return JSONResponse(content={'success': True})
+    except ValueError:
+        print("Invalid date format:", new_date)
+        return JSONResponse(content={'success': False, 'error': 'Invalid date format'})
 
 if __name__ == "__main__":
     import uvicorn
